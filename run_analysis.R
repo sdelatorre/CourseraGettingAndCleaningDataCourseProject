@@ -1,4 +1,4 @@
-# This script tidys the Human Activity Recognition Using Smartphones Data Set found in the 
+# This script tidys the "Human Activity Recognition Using Smartphones Data Set" found in the 
 # UCI Machine Learning Repostiory per the project instructions:
 #
 # 1. Merges the training and the test sets to create one data set.
@@ -20,7 +20,8 @@ library(tidyr)
 # User-editable Variables
 ##############################################################################################
 
-# Set the location for the base directory of the files included in the dataset
+# Set the location for the base directory of the files included in the dataset. Modify
+# as needed.
 data.files.base.dir = "../UCI HAR Dataset"
 
 ##############################################################################################
@@ -37,14 +38,14 @@ data.files.base.dir = "../UCI HAR Dataset"
 var.name.regex = "^(t|f)([A-Z][a-z]+)([^-]+)-([^()]+)\\(\\)(-[A-Z])?$"
 
 # A list of data file locations
-data.files <- list("feature.names" = "./features.txt",
-                    "activity.labels" = "./activity_labels.txt",
-                    "train.subject.ids" = "./train/subject_train.txt",
-                    "train.data" = "./train/X_train.txt",
-                    "train.activities" = "./train/y_train.txt",
-                    "test.subject.ids" = "./test/subject_test.txt",
-                    "test.data" = "./test/X_test.txt",
-                    "test.activities" = "./test/y_test.txt")
+data.files <- list("data.labels" = "./features.txt",
+                   "activity.labels" = "./activity_labels.txt",
+                   "train.subject.ids" = "./train/subject_train.txt",
+                   "train.data" = "./train/X_train.txt",
+                   "train.activities" = "./train/y_train.txt",
+                   "test.subject.ids" = "./test/subject_test.txt",
+                   "test.data" = "./test/X_test.txt",
+                   "test.activities" = "./test/y_test.txt")
 
 ##############################################################################################
 # Project Setup
@@ -70,12 +71,16 @@ if (!dir.exists("./data")) dir.create("./data")
 # Functions
 ##############################################################################################
 
-# Reads in the activity ID file and translates it into the associated feature names.
-#
-# @param feature.labels A dataframe containing a mapping of feature ids -> labels
-# @param filename The file containing the activity ID data.
-#
 translate.activities <- function(feature.labels, filename) {
+  # Reads in the activity ID file and translates it into the associated feature names.
+  #
+  # Args:
+  #   feature.labels: A data frame containing a mapping of feature ids -> labels
+  #   filename: The file containing the activity ID data. The data is expected to be in a 
+  #             single column.
+  #
+  # Returns:
+  #   A vector of labels corresponding to the IDs stored in the input file.
   selected.features <- read.datafile(filename)
   names(selected.features) <- c("Activity.ID")
   
@@ -83,44 +88,58 @@ translate.activities <- function(feature.labels, filename) {
   select(Activity.Name)
 }
 
-# Validates that the data dimensions are of the correct size.
-#
-# @param features The features dataframe
-# @param subject.ids The dataframe containing the subject IDs
-# @param data The main data dataframe
-# @param activities The dataframe containing the activiy data
-#
 data.isValid <- function(features, subject.ids, data, activities) {
+  # Validates that the data dimensions are of the expected size:
+  #
+  # 1. The number of rows in the data should equal the length of the subject.ids.
+  # 2. The length of the activities should equal the length of the subject.ids.
+  # 3. The length of the features should equal the number of columns in the data.
+  #
+  # Args:
+  #   features: The features data frame
+  #   subject.ids: The data frame containing the subject IDs
+  #   data: The raw data data frame
+  #   activities: The data frame containing the activiy data
+  #
+  # Returns:  
+  #   TRUE if the data is of the correct size, FALSE otherwise
   all(c(length(subject.ids) == nrow(data),
         length(subject.ids) == length(activities),
         length(features) == ncol(data)))
 }
 
-# Helper function used to read data from a table-like data file.
-#
-# @param filename The data file to load.
-#
 read.datafile <- function(filename) {
+  # Helper function used to read data from a table-like data file.
+  #
+  # Args:
+  #   filename: The data file to load.
+  #
+  # Returns:
+  #   A datagrame containing the data.
   read.table(filename, 
              header = FALSE, 
              sep = "", 
              stringsAsFactors = FALSE)
 }
 
-# Helper function used to build a dataframes from the various datasets. The function will:
-#
-# 1. Merge the datasets. 
-# 2. Remove all of the variables that are not associated with the mean or standard
-#    deviation. 
-# 3. Returns the results
-#
-# @param features A vector of column names 
-# @param subject.ids A vector of IDs for the test subjects
-# @param data The data set
-# @param activities The activity that corresponded to the measurement
-# @param data.type A constant value added to the dataset to indicate the type (e.g. 'test'
-#                  or 'training')
 build.dataframe <- function(features, subject.ids, data, activities) {
+  # Helper function used to build a data frames from the various datasets. The function will:
+  #
+  # 1. Merge the datasets. 
+  # 2. Remove all of the variables that are not associated with the mean or standard
+  #    deviation. 
+  # 3. Returns the results
+  #
+  # Args:
+  #   features: A vector of column names 
+  #   subject.ids: A vector of IDs for the test subjects
+  #   data: The data set
+  #   activities: The activity that corresponded to the measurement
+  #   data.type: A constant value added to the dataset to indicate the type (e.g. 'test'
+  #              or 'training')
+  #
+  # Returns:
+  #   A merged data frame.
   names(data) = features
   
   # ASSIGNMENT STEP 2: Retain only the variables measuring the mean and std
@@ -133,22 +152,36 @@ build.dataframe <- function(features, subject.ids, data, activities) {
                   select(Subject.Id, Activity.Name, everything())
 }
 
-# Reformats the column names to make them a little easier to read.
-#
-# @param original.names The names to transform
-#
 format.colnames <- function(original.names) {
+  # Reformats the column names to make them a little easier to read.
+  #
+  # Args:
+  #   original.names: The names to transform
+  #
+  # Returns:
+  #   A vector of reformatted column names.
   process.name <- function(name) {
     parts <- str_match(name, var.name.regex)[1,2:6]
     domain <- switch(parts[1], t = "Time", f = "Frequency")
     type = parts[2]
     signal = parts[3]
-    stat = parts[4]
+    stat = capitalize(parts[4])
     axis = parts[5]
     if (is.na(axis)) sprintf("%s.%s.%s::%s", domain, type, signal, stat)
     else sprintf("%s.%s.%s.%sAxis::%s", domain, type, signal, substr(axis, 2, 2), stat)
   }
   sapply(original.names, process.name, USE.NAMES = FALSE)
+}
+
+capitalize <- function(word) {
+  # Helper function that capitalizes a string.
+  #
+  # Args:
+  #   word: The string to capitalize.
+  # 
+  # Returns:
+  #   The capitalized word.
+  paste(toupper(substr(word[1], 1, 1)), substr(word, 2, nchar(word)), sep = "")
 }
 
 ##############################################################################################
@@ -165,8 +198,8 @@ format.colnames <- function(original.names) {
 #
 # Finally, the resulting datasets are merged and reshaped before being saved to disk.
 ##############################################################################################
-# General dataframes
-feature.names <- read.datafile(data.files$feature.names)$V2
+# General data loading.
+data.labels <- read.datafile(data.files$data.labels)$V2
 
 activity.labels <- read.datafile(data.files$activity.labels)
 names(activity.labels) = c("Activity.ID", "Activity.Name")
@@ -177,7 +210,7 @@ train.data <- read.datafile(data.files$train.data)
 train.activities <- translate.activities(activity.labels, data.files$train.activities)$Activity.Name
 
 # Validate data
-if (!data.isValid(feature.names, train.subject.ids, train.data, train.activities )) {
+if (!data.isValid(data.labels, train.subject.ids, train.data, train.activities )) {
   stop("The data in the training set is incorrect, please verify the data.")
 }
 
@@ -187,14 +220,25 @@ test.data <- read.datafile(data.files$test.data)
 test.activities <- translate.activities(activity.labels, data.files$test.activities)$Activity.Name
 
 # Validate data
-if (!data.isValid(feature.names, test.subject.ids, test.data, test.activities)) {
+if (!data.isValid(data.labels, test.subject.ids, test.data, test.activities)) {
   stop("The data in the test set is incorrect, please verify the data.")
 }
 
-# Build the dataframes from the file data. This includes removing the unwanted variables
+# Print out dataset dimensions before transformation.
+print("Data Dimensions:")
+print(" Training Data:")
+print(sprintf("  subject.ids: length(%s)", length(train.subject.ids)))
+print(sprintf("  data: dim(%s, %s)", dim(train.data)[1], dim(train.data)[2]))
+print(sprintf("  activities: length(%s)", length(train.activities)))
+print(" Test Data:")
+print(sprintf("  subject.ids: length(%s)", length(test.subject.ids)))
+print(sprintf("  data: dim(%s, %s)", dim(test.data)[1], dim(test.data)[2]))
+print(sprintf("  activities: length(%s)", length(test.activities)))
+
+# Build the data frames from the file data. This includes removing the unwanted variables
 # as described in ASSIGNMENT STEP 2.
-train.df <- build.dataframe(feature.names, train.subject.ids, train.data, train.activities)
-test.df <- build.dataframe(feature.names, test.subject.ids, test.data, test.activities)
+train.df <- build.dataframe(data.labels, train.subject.ids, train.data, train.activities)
+test.df <- build.dataframe(data.labels, test.subject.ids, test.data, test.activities)
 
 # ASSIGNMENT STEP 1: merge the datasets.
 merged.df <- rbind(train.df, test.df)
@@ -207,12 +251,12 @@ merged.df$Observation.Id <- 1:nrow(merged.df)
 # Calculate and save a few values to validate the reshaping/calculation done 
 # at the end.
 user.one.data <- merged.df[merged.df$Subject.Id == 1,]
-user.one.avg.mean <- mean(user.one.data$`Time.Body.Acc.XAxis::mean`)
-user.one.avg.std <- mean(user.one.data$`Time.Body.Acc.XAxis::std`)
+user.one.avg.mean <- mean(user.one.data$`Time.Body.Acc.XAxis::Mean`)
+user.one.avg.std <- mean(user.one.data$`Time.Body.Acc.XAxis::Std`)
 
 walking.data <- merged.df[merged.df$Activity.Name == "WALKING",]
-walking.avg.mean <- mean(walking.data$`Time.Body.Acc.XAxis::mean`)
-walking.avg.std <- mean(walking.data$`Time.Body.Acc.XAxis::std`)
+walking.avg.mean <- mean(walking.data$`Time.Body.Acc.XAxis::Mean`)
+walking.avg.std <- mean(walking.data$`Time.Body.Acc.XAxis::Std`)
 
 # reshape the data into its final format
 merged.df <- merged.df %>% 
@@ -229,12 +273,11 @@ write.csv(merged.df, "./data/full-dataset.csv")
 # ASSIGNMENT STEP 5: Creates a second, independent tidy data set with the average of each variable 
 # for each activity and each subject.
 
-
 # Calculate the average of each variable for each activity 
 by.activity.df <- merged.df %>% 
-                    select(Activity.Name, Measurement.Name, mean, std) %>%
+                    select(Activity.Name, Measurement.Name, Mean, Std) %>%
                     group_by(Activity.Name, Measurement.Name) %>% 
-                    summarize( Average.Mean = mean(mean), Average.Standard.Deviation = mean(std))
+                    summarize( Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Std))
 
 # Validate the calculations
 validation.activity <- by.activity.df[by.activity.df$Activity.Name == "WALKING" &
@@ -249,9 +292,9 @@ rm(validation.activity, walking.data, walking.avg.mean, walking.avg.std)
 
 # Calculate the average of each variable for each subject 
 by.subject.df <- merged.df %>%
-                   select(Subject.Id, Measurement.Name, mean, std) %>%
+                   select(Subject.Id, Measurement.Name, Mean, Std) %>%
                    group_by(Subject.Id, Measurement.Name) %>%
-                   summarize( Average.Mean = mean(mean), Average.Standard.Deviation = mean(std))
+                   summarize( Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Std))
 
 # Validate the calculations.
 validation.subject <- by.subject.df[by.subject.df$Subject.Id == 1 &
@@ -266,7 +309,7 @@ rm(validation.subject, user.one.data, user.one.avg.mean, user.one.avg.std)
 
 # Calculate the average of each variable for each subject and activity
 by.activity.subject.df <- merged.df %>%
-                            select(Activity.Name, Subject.Id, Measurement.Name, mean, std) %>%
+                            select(Activity.Name, Subject.Id, Measurement.Name, Mean, Std) %>%
                             group_by(Activity.Name, Subject.Id, Measurement.Name) %>%
-                            summarize( Average.Mean = mean(mean), Average.Standard.Deviation = mean(std))
+                            summarize( Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Std))
 write.csv(by.activity.df, "./data/summary.by.activity.and.subject.csv")
