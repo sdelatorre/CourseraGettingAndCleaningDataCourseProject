@@ -17,16 +17,12 @@ library(stringr)
 library(tidyr)
 
 ##############################################################################################
-# User-editable Variables
+# Constants
 ##############################################################################################
 
 # Set the location for the base directory of the files included in the dataset. Modify
 # as needed.
-data.files.base.dir = "../UCI HAR Dataset"
-
-##############################################################################################
-# Misc. Variables
-##############################################################################################
+kDataFilesDir = "../UCI HAR Dataset"
 
 # Regular expression that will split a variable name (e.g. "tBodyAcc-mean()-X") into the 
 # following parts:
@@ -35,10 +31,10 @@ data.files.base.dir = "../UCI HAR Dataset"
 # [3] measurement signal
 # [4] measurement type (mean or std)
 # [5] (optional) measurement axis
-var.name.regex = "^(t|f)([A-Z][a-z]+)([^-]+)-([^()]+)\\(\\)(-[A-Z])?$"
+kVarNameRegex = "^(t|f)([A-Z][a-z]+)([^-]+)-([^()]+)\\(\\)(-[A-Z])?$"
 
 # A list of data file locations
-data.files <- list("data.labels" = "./features.txt",
+kDataFiles <- list("data.labels" = "./features.txt",
                    "activity.labels" = "./activity_labels.txt",
                    "train.subject.ids" = "./train/subject_train.txt",
                    "train.data" = "./train/X_train.txt",
@@ -52,16 +48,16 @@ data.files <- list("data.labels" = "./features.txt",
 ##############################################################################################
 
 # Verify the data file base directory exists.
-if (!dir.exists(data.files.base.dir)) {
+if (!dir.exists(kDataFilesDir)) {
   stop("The base directory for the repository files does not exist. Please correct the setting")
 }
 
 # Verify the data files are located where they are expected to be and prepend the base 
 # directory path to the file location.
-for (name in names(data.files)) {
-  filename <- file.path(data.files.base.dir, data.files[[name]])
+for (name in names(kDataFiles)) {
+  filename <- file.path(kDataFilesDir, kDataFiles[[name]])
   if (!file.exists(filename)) stop(sprintf("Could not find required file: %s", filename))
-  else data.files[name] <- filename
+  else kDataFiles[name] <- filename
 }
 
 # Create the output directory for the generated files.
@@ -71,7 +67,7 @@ if (!dir.exists("./data")) dir.create("./data")
 # Functions
 ##############################################################################################
 
-translate.activities <- function(feature.labels, filename) {
+TranslateActivities <- function(feature.labels, filename) {
   # Reads in the activity ID file and translates it into the associated feature names.
   #
   # Args:
@@ -81,14 +77,14 @@ translate.activities <- function(feature.labels, filename) {
   #
   # Returns:
   #   A vector of labels corresponding to the IDs stored in the input file.
-  selected.features <- read.datafile(filename)
+  selected.features <- ReadDatafile(filename)
   names(selected.features) <- c("Activity.ID")
   
   full_join(feature.labels, selected.features) %>%
   select(Activity.Name)
 }
 
-data.isValid <- function(features, subject.ids, data, activities) {
+DataIsValid <- function(features, subject.ids, data, activities) {
   # Validates that the data dimensions are of the expected size:
   #
   # 1. The number of rows in the data should equal the length of the subject.ids.
@@ -108,7 +104,7 @@ data.isValid <- function(features, subject.ids, data, activities) {
         length(features) == ncol(data)))
 }
 
-read.datafile <- function(filename) {
+ReadDatafile <- function(filename) {
   # Helper function used to read data from a table-like data file.
   #
   # Args:
@@ -122,7 +118,7 @@ read.datafile <- function(filename) {
              stringsAsFactors = FALSE)
 }
 
-build.dataframe <- function(features, subject.ids, data, activities) {
+BuildDataFrame <- function(features, subject.ids, data, activities) {
   # Helper function used to build a data frames from the various datasets. The function will:
   #
   # 1. Merge the datasets. 
@@ -145,14 +141,14 @@ build.dataframe <- function(features, subject.ids, data, activities) {
   # ASSIGNMENT STEP 2: Retain only the variables measuring the mean and std
   modified.df <- data[, grep("mean\\(|std\\(", features, ignore.case = TRUE)]
   # ASSIGNMENT STEP 4: Use descriptive variable names 
-  names(modified.df) <- format.colnames(names(modified.df))
+  names(modified.df) <- FormatColumnNames(names(modified.df))
   
   modified.df %>% mutate(Activity.Name = activities) %>%
                   mutate(Subject.Id = subject.ids) %>% 
                   select(Subject.Id, Activity.Name, everything())
 }
 
-format.colnames <- function(original.names) {
+FormatColumnNames <- function(original.names) {
   # Reformats the column names to make them a little easier to read.
   #
   # Args:
@@ -161,11 +157,11 @@ format.colnames <- function(original.names) {
   # Returns:
   #   A vector of reformatted column names.
   process.name <- function(name) {
-    parts <- str_match(name, var.name.regex)[1,2:6]
+    parts <- str_match(name, kVarNameRegex)[1,2:6]
     domain <- switch(parts[1], t = "Time", f = "Frequency")
     type = parts[2]
     signal = parts[3]
-    stat = capitalize(parts[4])
+    stat = Capitalize(parts[4])
     axis = parts[5]
     if (is.na(axis)) sprintf("%s.%s.%s::%s", domain, type, signal, stat)
     else sprintf("%s.%s.%s.%sAxis::%s", domain, type, signal, substr(axis, 2, 2), stat)
@@ -173,14 +169,14 @@ format.colnames <- function(original.names) {
   sapply(original.names, process.name, USE.NAMES = FALSE)
 }
 
-capitalize <- function(word) {
-  # Helper function that capitalizes a string.
+Capitalize <- function(word) {
+  # Helper function that Capitalizes a string.
   #
   # Args:
-  #   word: The string to capitalize.
+  #   word: The string to Capitalize.
   # 
   # Returns:
-  #   The capitalized word.
+  #   The Capitalized word.
   paste(toupper(substr(word[1], 1, 1)), substr(word, 2, nchar(word)), sep = "")
 }
 
@@ -199,28 +195,28 @@ capitalize <- function(word) {
 # Finally, the resulting datasets are merged and reshaped before being saved to disk.
 ##############################################################################################
 # General data loading.
-data.labels <- read.datafile(data.files$data.labels)$V2
+data.labels <- ReadDatafile(kDataFiles$data.labels)$V2
 
-activity.labels <- read.datafile(data.files$activity.labels)
+activity.labels <- ReadDatafile(kDataFiles$activity.labels)
 names(activity.labels) = c("Activity.ID", "Activity.Name")
 
 # Load training data.
-train.subject.ids <- read.datafile(data.files$train.subject.ids)$V1
-train.data <- read.datafile(data.files$train.data)
-train.activities <- translate.activities(activity.labels, data.files$train.activities)$Activity.Name
+train.subject.ids <- ReadDatafile(kDataFiles$train.subject.ids)$V1
+train.data <- ReadDatafile(kDataFiles$train.data)
+train.activities <- TranslateActivities(activity.labels, kDataFiles$train.activities)$Activity.Name
 
 # Validate data
-if (!data.isValid(data.labels, train.subject.ids, train.data, train.activities )) {
+if (!DataIsValid(data.labels, train.subject.ids, train.data, train.activities )) {
   stop("The data in the training set is incorrect, please verify the data.")
 }
 
 # Load testing data.
-test.subject.ids <- read.datafile(data.files$test.subject.ids)$V1
-test.data <- read.datafile(data.files$test.data)
-test.activities <- translate.activities(activity.labels, data.files$test.activities)$Activity.Name
+test.subject.ids <- ReadDatafile(kDataFiles$test.subject.ids)$V1
+test.data <- ReadDatafile(kDataFiles$test.data)
+test.activities <- TranslateActivities(activity.labels, kDataFiles$test.activities)$Activity.Name
 
 # Validate data
-if (!data.isValid(data.labels, test.subject.ids, test.data, test.activities)) {
+if (!DataIsValid(data.labels, test.subject.ids, test.data, test.activities)) {
   stop("The data in the test set is incorrect, please verify the data.")
 }
 
@@ -237,8 +233,8 @@ print(sprintf("  activities: length(%s)", length(test.activities)))
 
 # Build the data frames from the file data. This includes removing the unwanted variables
 # as described in ASSIGNMENT STEP 2.
-train.df <- build.dataframe(data.labels, train.subject.ids, train.data, train.activities)
-test.df <- build.dataframe(data.labels, test.subject.ids, test.data, test.activities)
+train.df <- BuildDataFrame(data.labels, train.subject.ids, train.data, train.activities)
+test.df <- BuildDataFrame(data.labels, test.subject.ids, test.data, test.activities)
 
 # ASSIGNMENT STEP 1: merge the datasets.
 merged.df <- rbind(train.df, test.df)
@@ -268,7 +264,7 @@ rm(train.df, train.data, train.activities, train.subject.ids)
 rm(test.df, test.data, test.activities, test.subject.ids)
 
 # Dump the tidy dataset to disk
-write.csv(merged.df, "./data/full-dataset.csv")
+write.csv(merged.df, "./data/tidy-dataset.csv", row.names = FALSE)
 
 # ASSIGNMENT STEP 5: Creates a second, independent tidy data set with the average of each variable 
 # for each activity and each subject.
@@ -287,7 +283,7 @@ if (validation.activity$Average.Mean != walking.avg.mean ||
   stop("The activity values calculated before the data manipulation do not match the validation values.")
 }
 
-write.csv(by.activity.df, "./data/summary.by.activity.csv")
+write.csv(by.activity.df, "./data/summary.by.activity.csv", row.names=FALSE)
 rm(validation.activity, walking.data, walking.avg.mean, walking.avg.std)
 
 # Calculate the average of each variable for each subject 
@@ -304,7 +300,7 @@ if (validation.subject$Average.Mean != user.one.avg.mean ||
   stop("The subject values calculated before the data manipulation do not match the validation values.")
 }
 
-write.csv(by.activity.df, "./data/summary.by.subject.csv")
+write.csv(by.activity.df, "./data/summary.by.subject.csv", row.names=FALSE)
 rm(validation.subject, user.one.data, user.one.avg.mean, user.one.avg.std)
 
 # Calculate the average of each variable for each subject and activity
@@ -312,4 +308,4 @@ by.activity.subject.df <- merged.df %>%
                             select(Activity.Name, Subject.Id, Measurement.Name, Mean, Std) %>%
                             group_by(Activity.Name, Subject.Id, Measurement.Name) %>%
                             summarize( Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Std))
-write.csv(by.activity.df, "./data/summary.by.activity.and.subject.csv")
+write.csv(by.activity.subject.df, "./data/summarized-tidy-dataset.csv", row.names = FALSE)
