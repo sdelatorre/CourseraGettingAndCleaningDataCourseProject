@@ -2,9 +2,9 @@
 This document describes the data and the transformations used to generate the tidy data files required for the Getting and Cleaning Data Course Project.
 
 ### Raw Data
-The raw data used for this analysis is the "Human Activity Recognition Using Smartphones Data Set" found in the UCI Machine Learning Repository (http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones). The dataset can be found here: https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip. 
+The raw data used for this analysis is the "Human Activity Recognition Using Smartphones" dataset found in the UCI Machine Learning Repository (http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones). The full dataset can be found here: https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip. 
 
-The data represents "the recordings of 30 subjects performing activities of daily living (ADL) while carrying a waist-mounted smartphone with embedded inertial sensors".
+The data represents various statistics calculated from "the recordings of 30 subjects performing activities of daily living (ADL) while carrying a waist-mounted smartphone with embedded inertial sensors".
 
 The files from the dataset used in this project include the following:
 
@@ -27,7 +27,7 @@ The features.txt and activity_labels.txt files contain labels for the data found
 #### Step 1: Assemble Data
 
 The training dataset is spread between three files (subject_train.txt, X_train.txt, y_train.txt), so the first step is to read those files into data frames for further processing. The following modifications are made to the data from each file:
-* subject_train.txt: Only of the first column of the data is retained.
+* subject_train.txt: Contains only one column, so that column is extracted and stored separately.
 * X_train.txt: No modifications made at this time.
 * y_train.txt: The activity IDs in this file are replaced with the corresponding labels found in the activity_labels.txt file.
 
