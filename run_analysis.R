@@ -9,7 +9,7 @@
 #    average of each variable for each activity and each subject.
 
 ##############################################################################################
-# Load Libraries
+# Libraries
 ##############################################################################################
 
 library(dplyr)
@@ -241,71 +241,27 @@ merged.df <- rbind(train.df, test.df)
 
 # Add an observation id before reshaping the data. The reshaping will break apart each 
 # row of observations, so this ID will allow the original row to be reconstructed if
-# needed. It also prevents the spread function from crashing R/R Studio. 
+# needed. It also prevents the spread function from crashing R Studio. 
 merged.df$Observation.Id <- 1:nrow(merged.df)
-
-# Calculate and save a few values to validate the reshaping/calculation done 
-# at the end.
-user.one.data <- merged.df[merged.df$Subject.Id == 1,]
-user.one.avg.mean <- mean(user.one.data$`Time.Body.Acc.XAxis::Mean`)
-user.one.avg.std <- mean(user.one.data$`Time.Body.Acc.XAxis::Std`)
-
-walking.data <- merged.df[merged.df$Activity.Name == "WALKING",]
-walking.avg.mean <- mean(walking.data$`Time.Body.Acc.XAxis::Mean`)
-walking.avg.std <- mean(walking.data$`Time.Body.Acc.XAxis::Std`)
 
 # reshape the data into its final format
 merged.df <- merged.df %>% 
   gather(Measurement.Name, Measurement.Value, -Subject.Id, -Activity.Name, -Observation.Id) %>%
   separate(Measurement.Name, c("Measurement.Name", "Measurement.Stat"), sep = "::") %>%
-  spread(Measurement.Stat, Measurement.Value)
+  spread(Measurement.Stat, Measurement.Value) %>%
+  rename(Standard.Deviation = Std)
 
+# Cleanup
 rm(train.df, train.data, train.activities, train.subject.ids)
 rm(test.df, test.data, test.activities, test.subject.ids)
 
-# Dump the tidy dataset to disk
+# Write the tidy dataset to disk
 write.csv(merged.df, "./data/tidy-dataset.csv", row.names = FALSE)
 
-# ASSIGNMENT STEP 5: Creates a second, independent tidy data set with the average of each variable 
-# for each activity and each subject.
-
-# Calculate the average of each variable for each activity 
-by.activity.df <- merged.df %>% 
-                    select(Activity.Name, Measurement.Name, Mean, Std) %>%
-                    group_by(Activity.Name, Measurement.Name) %>% 
-                    summarize( Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Std))
-
-# Validate the calculations
-validation.activity <- by.activity.df[by.activity.df$Activity.Name == "WALKING" &
-                                      by.activity.df$Measurement.Name == "Time.Body.Acc.XAxis",][1,]
-if (validation.activity$Average.Mean != walking.avg.mean ||
-    validation.activity$Average.Standard.Deviation != walking.avg.std) {
-  stop("The activity values calculated before the data manipulation do not match the validation values.")
-}
-
-write.csv(by.activity.df, "./data/summary.by.activity.csv", row.names=FALSE)
-rm(validation.activity, walking.data, walking.avg.mean, walking.avg.std)
-
-# Calculate the average of each variable for each subject 
-by.subject.df <- merged.df %>%
-                   select(Subject.Id, Measurement.Name, Mean, Std) %>%
-                   group_by(Subject.Id, Measurement.Name) %>%
-                   summarize( Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Std))
-
-# Validate the calculations.
-validation.subject <- by.subject.df[by.subject.df$Subject.Id == 1 &
-                                    by.subject.df$Measurement.Name == "Time.Body.Acc.XAxis" ,][1,]
-if (validation.subject$Average.Mean != user.one.avg.mean ||
-    validation.subject$Average.Standard.Deviation != user.one.avg.std) {
-  stop("The subject values calculated before the data manipulation do not match the validation values.")
-}
-
-write.csv(by.activity.df, "./data/summary.by.subject.csv", row.names=FALSE)
-rm(validation.subject, user.one.data, user.one.avg.mean, user.one.avg.std)
-
-# Calculate the average of each variable for each subject and activity
+# Calculate the average of each variable for each subject and activity and write to disk.
 by.activity.subject.df <- merged.df %>%
-                            select(Activity.Name, Subject.Id, Measurement.Name, Mean, Std) %>%
-                            group_by(Activity.Name, Subject.Id, Measurement.Name) %>%
-                            summarize( Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Std))
+  select(-Observation.Id) %>%
+  group_by(Activity.Name, Subject.Id, Measurement.Name) %>%
+  summarize(Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Standard.Deviation))
+
 write.csv(by.activity.subject.df, "./data/summarized-tidy-dataset.csv", row.names = FALSE)
