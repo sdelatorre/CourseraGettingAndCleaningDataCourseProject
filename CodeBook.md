@@ -83,7 +83,7 @@ At the end of the process, the dataset contains six variables (described in more
 The final dataset is saved as "./data/tidy-dataset.csv".
 
 #### Step 8: 
-The second dataset produced for the project starts with the tidy dataset from Step 6 and performs the following aggregations:
+The second dataset starts with the tidy dataset from Step 6 and performs the following aggregations:
 1. All variables except for the Observation.Id field are selected for processing.
 2. The data is grouped by Activity.Name, Subject.Id, and Measurement.Name.
 3. The average mean and standard deviation (Average.Mean and Average.Standard.Deviation, respectively) are calculated for each group.
