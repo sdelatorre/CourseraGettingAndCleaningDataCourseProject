@@ -1,11 +1,11 @@
-# This script tidys the "Human Activity Recognition Using Smartphones Data Set" found in the 
-# UCI Machine Learning Repostiory per the project instructions:
+# This script tidys the "Human Activity Recognition Using Smartphones" dataset found in the 
+# UCI Machine Learning Repostiory. The instructions provided for this analysis are as follows:
 #
 # 1. Merges the training and the test sets to create one data set.
 # 2. Extracts only the measurements on the mean and standard deviation for each measurement.
 # 3. Uses descriptive activity names to name the activities in the data set
 # 4. Appropriately labels the data set with descriptive variable names.
-# 5. From the data set in step 4, creates a second, independent tidy data set with the 
+# 5. From the dataset in step 4, creates a second, independent tidy data set with the 
 #    average of each variable for each activity and each subject.
 
 ##############################################################################################
@@ -20,14 +20,13 @@ library(tidyr)
 # Constants
 ##############################################################################################
 
-# Set the location for the base directory of the files included in the dataset. Modify
-# as needed.
+# Set the base directory for the raw data files. Modify as needed.
 kDataFilesDir = "../UCI HAR Dataset"
 
 # Regular expression that will split a variable name (e.g. "tBodyAcc-mean()-X") into the 
 # following parts:
 # [1] measurement domain (t or f)
-# [2] accelration type
+# [2] acceleration type
 # [3] measurement signal
 # [4] measurement type (mean or std)
 # [5] (optional) measurement axis
@@ -44,7 +43,7 @@ kDataFiles <- list("data.labels" = "./features.txt",
                    "test.activities" = "./test/y_test.txt")
 
 ##############################################################################################
-# Project Setup
+# Project Setup / Raw Data Verifications
 ##############################################################################################
 
 # Verify the data file base directory exists.
@@ -92,7 +91,7 @@ DataIsValid <- function(features, subject.ids, data, activities) {
   # 3. The length of the features should equal the number of columns in the data.
   #
   # Args:
-  #   features: The features data frame
+  #   features: The features vector
   #   subject.ids: The data frame containing the subject IDs
   #   data: The raw data data frame
   #   activities: The data frame containing the activiy data
@@ -111,7 +110,7 @@ ReadDatafile <- function(filename) {
   #   filename: The data file to load.
   #
   # Returns:
-  #   A datagrame containing the data.
+  #   A data frame containing the data.
   read.table(filename, 
              header = FALSE, 
              sep = "", 
@@ -119,12 +118,7 @@ ReadDatafile <- function(filename) {
 }
 
 BuildDataFrame <- function(features, subject.ids, data, activities) {
-  # Helper function used to build a data frames from the various datasets. The function will:
-  #
-  # 1. Merge the datasets. 
-  # 2. Remove all of the variables that are not associated with the mean or standard
-  #    deviation. 
-  # 3. Returns the results
+  # Helper function used to build a data frame from the various datasets. 
   #
   # Args:
   #   features: A vector of column names 
@@ -138,9 +132,10 @@ BuildDataFrame <- function(features, subject.ids, data, activities) {
   #   A merged data frame.
   names(data) = features
   
-  # ASSIGNMENT STEP 2: Retain only the variables measuring the mean and std
+  # Retain only the variables measuring the mean and std
   modified.df <- data[, grep("mean\\(|std\\(", features, ignore.case = TRUE)]
-  # ASSIGNMENT STEP 4: Use descriptive variable names 
+  
+  # Use descriptive variable names 
   names(modified.df) <- FormatColumnNames(names(modified.df))
   
   modified.df %>% mutate(Activity.Name = activities) %>%
@@ -170,31 +165,21 @@ FormatColumnNames <- function(original.names) {
 }
 
 Capitalize <- function(word) {
-  # Helper function that Capitalizes a string.
+  # Helper function that capitalizes a string.
   #
   # Args:
   #   word: The string to Capitalize.
   # 
   # Returns:
-  #   The Capitalized word.
+  #   The capitalized word.
   paste(toupper(substr(word[1], 1, 1)), substr(word, 2, nchar(word)), sep = "")
 }
 
 ##############################################################################################
 # Data Processing 
-#
-# Read the data files into data frames. The data in these files are separated by a variable- 
-# length space characters, so read.table is used to ingest the text.
-#
-# Data validation is performed after reading the data:
-# 1. The number of rows for the data & activity datasets should be the same as the
-#    number of rows in the subject id dataset.
-# 2. The number of features in the features dataset should match the number
-#    of columns in the data datasets.
-#
-# Finally, the resulting datasets are merged and reshaped before being saved to disk.
 ##############################################################################################
-# General data loading.
+
+# Load data from supporting files.
 data.labels <- ReadDatafile(kDataFiles$data.labels)$V2
 
 activity.labels <- ReadDatafile(kDataFiles$activity.labels)
@@ -231,17 +216,16 @@ print(sprintf("  subject.ids: length(%s)", length(test.subject.ids)))
 print(sprintf("  data: dim(%s, %s)", dim(test.data)[1], dim(test.data)[2]))
 print(sprintf("  activities: length(%s)", length(test.activities)))
 
-# Build the data frames from the file data. This includes removing the unwanted variables
-# as described in ASSIGNMENT STEP 2.
+# Build the data frames from the file data. 
 train.df <- BuildDataFrame(data.labels, train.subject.ids, train.data, train.activities)
 test.df <- BuildDataFrame(data.labels, test.subject.ids, test.data, test.activities)
 
-# ASSIGNMENT STEP 1: merge the datasets.
+# Merge the datasets.
 merged.df <- rbind(train.df, test.df)
 
 # Add an observation id before reshaping the data. The reshaping will break apart each 
 # row of observations, so this ID will allow the original row to be reconstructed if
-# needed. It also prevents the spread function from crashing R Studio. 
+# needed. It also prevents the tidyr::spread function from crashing R Studio. 
 merged.df$Observation.Id <- 1:nrow(merged.df)
 
 # reshape the data into its final format

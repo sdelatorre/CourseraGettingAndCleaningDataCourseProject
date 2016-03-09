@@ -101,6 +101,8 @@ The final dataset is saved as './data/summarized-tidy-dataset.csv'.
 
 #### ./data/tidy-dataset.csv
 
+__Dimensions:__ 339,867 Rows, 6 Columns
+
 | Variable Name | Data Type | Description |
 |:---           |:---       |:--          |
 | Subject.Id    | Integer   | The ID of the subject for whom the observation was captured.|
@@ -111,6 +113,9 @@ The final dataset is saved as './data/summarized-tidy-dataset.csv'.
 | Standard.Deviation | Number | The standard deviation for the measurement. |
 
 #### ./data/summarized-tidy-dataset.csv
+
+__Dimensions:__ 1,320 Rows, 5 Columns
+
 | Variable Name | Data Type | Description |
 |:---           |:---       |:--          |
 | Subject.Id    | Integer   | The ID of the subject for whom the observation was captured.|
