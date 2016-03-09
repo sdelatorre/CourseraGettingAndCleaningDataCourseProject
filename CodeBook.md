@@ -108,7 +108,7 @@ __Dimensions:__ 339,867 Rows, 6 Columns
 |:---           |:---       |:--          |
 | Subject.Id    | Integer   | The ID of the subject for whom the observation was captured.|
 | Activity.Name | Character | The activity the subject was performing during the observation.|
-| Observation.Id | Integer  | An ID for the observation. |
+| Observation.Id | Integer  | An ID for the original observation row. |
 | Measurement.Name | Character | The name of the measurement taken.|
 | Mean          | Number | The mean value for the measurement.|
 | Standard.Deviation | Number | The standard deviation for the measurement. |
