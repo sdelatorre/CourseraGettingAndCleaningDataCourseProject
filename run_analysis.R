@@ -79,7 +79,7 @@ TranslateActivities <- function(feature.labels, filename) {
   selected.features <- ReadDatafile(filename)
   names(selected.features) <- c("Activity.ID")
   
-  full_join(feature.labels, selected.features) %>%
+  full_join(selected.features, feature.labels) %>%
   select(Activity.Name)
 }
 
@@ -236,8 +236,8 @@ merged.df <- merged.df %>%
   rename(Standard.Deviation = Std)
 
 # Cleanup
-rm(train.df, train.data, train.activities, train.subject.ids)
-rm(test.df, test.data, test.activities, test.subject.ids)
+#rm(train.df, train.data, train.activities, train.subject.ids)
+#rm(test.df, test.data, test.activities, test.subject.ids)
 
 # Write the tidy dataset to disk
 write.table(merged.df, "./data/tidy-dataset.txt", row.names = FALSE)
