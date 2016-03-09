@@ -240,7 +240,7 @@ rm(train.df, train.data, train.activities, train.subject.ids)
 rm(test.df, test.data, test.activities, test.subject.ids)
 
 # Write the tidy dataset to disk
-write.csv(merged.df, "./data/tidy-dataset.csv", row.names = FALSE)
+write.table(merged.df, "./data/tidy-dataset.txt", row.names = FALSE)
 
 # Calculate the average of each variable for each subject and activity and write to disk.
 by.activity.subject.df <- merged.df %>%
@@ -248,4 +248,4 @@ by.activity.subject.df <- merged.df %>%
   group_by(Activity.Name, Subject.Id, Measurement.Name) %>%
   summarize(Average.Mean = mean(Mean), Average.Standard.Deviation = mean(Standard.Deviation))
 
-write.csv(by.activity.subject.df, "./data/summarized-tidy-dataset.csv", row.names = FALSE)
+write.table(by.activity.subject.df, "./data/summarized-tidy-dataset.txt", row.names = FALSE)
