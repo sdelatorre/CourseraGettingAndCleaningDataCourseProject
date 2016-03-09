@@ -53,7 +53,9 @@ The remaining column names are altered to make them more readable. Each name is 
 * If it exists, the measurement axis, denoted by a "-" followed by "X", "Y", or "Z" at the end of the name, is translated into <axis name>Axis (e.g. "XAxis" for "X").
 * Finally, the variable name is reassembled using this sequence:
 
-    '''<measurement domain>.<acceleration type>.<signal>.<axis>::<statistic>'''
+    '''
+    <measurement domain>.<acceleration type>.<signal>.<axis>::<statistic>
+    '''
 
 The "::" between the signal and the statistic is used as a delimiter that will be used for further processing at a later step.
 
